@@ -55,7 +55,7 @@ static void insert(StitchedArray *a, int index, int data) {
   //  now insert into cur_node at inner_index
   int *tmp_array = cur_node->data;
   if (!tmp_array) {
-    tmp_array = (int *)malloc(a->chunksize);
+    tmp_array = (int *)malloc(sizeof(int) << a->chunksize);
     cur_node->data = tmp_array;
   }
   tmp_array[path.inner_index] = data;
@@ -121,11 +121,10 @@ static void delete_node(Tree *target) {
 
 // free the given nodes array
 static void dealloc_node(Tree *target) { free(target->data); }
-
 // conditionally dealloc if the array at node is all 0,
 // this can be called as a pass on the entire tree for defragmentation
-static void dealloc_cond(Tree *target) {
-  for (int i = 0; i < target->chunksize; i++) {
+static void dealloc_cond(Tree *target, int chunksize) {
+  for (int i = 0; i < chunksize; i++) {
     if (target->data[i] != 0) {
       return;
     }
@@ -138,7 +137,7 @@ static void dealloc_cond(Tree *target) {
 // constructs a StitchedArray given chunksize
 static StitchedArray *build(int chunksize) {
   StitchedArray *a = (StitchedArray *)malloc(sizeof(StitchedArray));
-  a->chunksize = sizeof(int) << chunksize;
+  a->chunksize = chunksize;
   a->root.Node[0] = NULL;
   a->root.Node[1] = NULL;
   a->root.data = NULL;
