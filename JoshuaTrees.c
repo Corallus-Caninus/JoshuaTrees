@@ -14,6 +14,7 @@ typedef struct Tree {
   int *data;
 } Tree;
 typedef struct StitchedArray {
+  // NOTE: this must be a power of two
   int chunksize;
   Tree root;
 } StitchedArray;
@@ -33,8 +34,6 @@ static inline route_t route(StitchedArray root, int index) {
 static void insert(StitchedArray *a, int index, int data) {
   route_t path = route(*a, index);
   Tree *cur_node = &a->root;
-  // TODO: this should be more static?
-  int size_node = sizeof(int) << a->chunksize;
   // NOTE: cur node MUST not be NULL here
   do {
     void *child = cur_node->Node[path.outer_index & 1];
@@ -43,7 +42,7 @@ static void insert(StitchedArray *a, int index, int data) {
       Tree *tmp_node = (Tree *)malloc(sizeof(Tree));
       // TODO: we dont necessarily need to eagerly alloc each time, which
       //       can make sparse indexing performant, profile this
-      tmp_node->data = (int *)malloc(size_node);
+      tmp_node->data = (int *)malloc(a->chunksize);
       tmp_node->Node[0] = NULL;
       tmp_node->Node[1] = NULL;
       //  assign tmp_node to child
@@ -122,7 +121,7 @@ static void delete_node(Tree *target) {
 // constructs a StitchedArray given chunksize
 static StitchedArray *build(int chunksize) {
   StitchedArray *a = (StitchedArray *)malloc(sizeof(StitchedArray));
-  a->chunksize = chunksize;
+  a->chunksize = sizeof(int) << chunksize;
   a->root.Node[0] = NULL;
   a->root.Node[1] = NULL;
   a->root.data = NULL;
