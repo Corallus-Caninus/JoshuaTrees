@@ -33,7 +33,7 @@ static inline route_t route(StitchedArray root, int index) {
 
 static void insert(StitchedArray *a, int index, int data) {
   route_t path = route(*a, index);
-  Tree *cur_node = &a->root;
+  register Tree *cur_node = &a->root;
   // NOTE: cur node MUST not be NULL here
   do {
     void *child = cur_node->Node[path.outer_index & 1];
@@ -61,7 +61,7 @@ static void insert(StitchedArray *a, int index, int data) {
 
 static int get(StitchedArray *a, int index) {
   route_t path = route(*a, index);
-  Tree *cur_node = &a->root;
+  register Tree *cur_node = &a->root;
   // NOTE: cur node MUST not be NULL here
   do {
     void *child = cur_node->Node[path.outer_index & 1];
@@ -76,7 +76,7 @@ static int get(StitchedArray *a, int index) {
 // returns the given outer_index array
 static int **get_chunk(StitchedArray *a, int index) {
   route_t path = route(*a, index);
-  Tree *cur_node = &a->root;
+  register Tree *cur_node = &a->root;
   // NOTE: cur node MUST not be NULL here
   do {
     void *child = cur_node->Node[path.outer_index & 1];
@@ -91,7 +91,7 @@ static int **get_chunk(StitchedArray *a, int index) {
 // returns the node at the given outer_index
 static Tree *get_node(StitchedArray *a, int index) {
   route_t path = route(*a, index);
-  Tree *cur_node = &a->root;
+  register Tree *cur_node = &a->root;
   // NOTE: cur node MUST not be NULL here
   do {
     void *child = cur_node->Node[path.outer_index & 1];
