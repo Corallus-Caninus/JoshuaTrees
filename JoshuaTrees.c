@@ -40,9 +40,7 @@ static void insert(StitchedArray *a, int index, int data) {
     if (!child) {
       // allocate a new node
       Tree *tmp_node = (Tree *)malloc(sizeof(Tree));
-      // TODO: we dont necessarily need to eagerly alloc each time, which
-      //       can make sparse indexing performant, profile this
-      tmp_node->data = (int *)malloc(a->chunksize);
+      tmp_node->data = NULL;
       tmp_node->Node[0] = NULL;
       tmp_node->Node[1] = NULL;
       //  assign tmp_node to child
@@ -56,6 +54,10 @@ static void insert(StitchedArray *a, int index, int data) {
   } while ((path.outer_index != 1 && path.outer_index != 0));
   //  now insert into cur_node at inner_index
   int *tmp_array = cur_node->data;
+  if (!tmp_array) {
+	tmp_array = (int *)malloc(a->chunksize);
+	cur_node->data = tmp_array;
+  }
   tmp_array[path.inner_index] = data;
 }
 
@@ -116,6 +118,10 @@ static void delete_node(Tree *target) {
   free(target->data);
   free(target);
 }
+
+//TODO: dealloc_node //free the given nodes array
+//TODO: dealloc_cond //conditionally dealloc if the array at node is all 0, 
+//      this can be called as a pass on the entire tree for defragmentation
 
 // JOSHUA TREE CLASS //
 // constructs a StitchedArray given chunksize
