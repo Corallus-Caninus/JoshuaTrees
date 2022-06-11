@@ -35,28 +35,26 @@ static inline route_t route(StitchedArray root, int index) {
 void insert(StitchedArray *a, int index, int data) {
   route_t path = route(*a, index);
   JoshuaTree *cur_node = &a->root;
+  //TODO: this should be more static?
+  int size_node = sizeof(int) << a->chunksize;
   // NOTE: cur node MUST not be NULL here
   do {
     void *child = cur_node->Node[path.outer_index & 1];
     if (!child) {
       // allocate a new node
-      int size_node = sizeof(int) << a->chunksize;
       JoshuaTree *tmp_node = (JoshuaTree *)malloc(sizeof(JoshuaTree));
-      // TODO: we dont necessarily need to alloc each time, which
-      //       can make sparse indexing performant
-      tmp_node->data = (int *)malloc(size_node);
-      tmp_node->Node[0] = (void *)malloc(sizeof(JoshuaTree));
-      tmp_node->Node[1] = (void *)malloc(sizeof(JoshuaTree));
+      // TODO: we dont necessarily need to eagerly alloc each time, which
+      //       can make sparse indexing performant, profile this
       //  assign tmp_node to child
+      tmp_node->data = (int *)malloc(size_node);
+      tmp_node->Node[0] = NULL;
+      tmp_node->Node[1] = NULL;
       cur_node->Node[path.outer_index & 1] = tmp_node;
-      child = cur_node->Node[path.outer_index & 1];
-      path.outer_index >>= 1;
-      cur_node = tmp_node;
     } else {
-      path.outer_index >>= 1;
       cur_node = (JoshuaTree *)child;
+      path.outer_index >>= 1;
     }
-  } while (!(path.outer_index != 1 && path.outer_index != 0));
+  } while ((path.outer_index != 1 && path.outer_index != 0));
   //  now insert into cur_node at inner_index
   int *tmp_array = cur_node->data;
   tmp_array[path.inner_index] = data;
@@ -74,14 +72,14 @@ int get(StitchedArray *a, int index) {
       path.outer_index >>= 1;
       cur_node = (JoshuaTree *)child;
     }
-  } while (!(path.outer_index != 1 && path.outer_index != 0));
+  } while ((path.outer_index != 1 && path.outer_index != 0));
   //  now insert into cur_node at inner_index
   int *tmp_array = cur_node->data;
   return tmp_array[path.inner_index];
 }
 
 // returns the given outer_index array
-int *get_chunk(StitchedArray *a, int index) {
+int **get_chunk(StitchedArray *a, int index) {
   route_t path = route(*a, index);
   JoshuaTree *cur_node = &a->root;
   // NOTE: cur node MUST not be NULL here
@@ -95,7 +93,7 @@ int *get_chunk(StitchedArray *a, int index) {
     }
   } while (!(path.outer_index != 1 && path.outer_index != 0));
   //  now insert into cur_node at inner_index
-  int *tmp_array = cur_node->data;
+  int **tmp_array = cur_node->data;
   return tmp_array;
 }
 
@@ -112,7 +110,7 @@ JoshuaTree *get_node(StitchedArray *a, int index) {
       path.outer_index >>= 1;
       cur_node = (JoshuaTree *)child;
     }
-  } while (!(path.outer_index != 1 && path.outer_index != 0));
+  } while ((path.outer_index != 1 && path.outer_index != 0));
   //  now insert into cur_node at inner_index
   return cur_node;
 }
@@ -139,7 +137,6 @@ int main(int argc, char **argv) {
       .chunksize = 2,
       .root = {.Node = {NULL, NULL}, .data = (int *)malloc(size_node)}};
   printf("%d\n", 1 << test_array.chunksize);
-  // TODO: dropping references here
   insert(&test_array, 10, 1);
   printf("done");
   insert(&test_array, 11, 2);
@@ -150,6 +147,9 @@ int main(int argc, char **argv) {
   insert(&test_array, 11, 3);
   int get_three = get(&test_array, 11);
   printf("%d\n", get_three);
+  insert(&test_array, 10000000, 1);
+  int get_last = get(&test_array, 10000000);
+  printf("last: %d\n", get_last);
   // print the time
   printf("%d\n", (int)(time(NULL)) - (int)(t));
 }
