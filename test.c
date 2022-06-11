@@ -3,7 +3,7 @@ int main(int argc, char *argv[]) {
   double time = clock();
 
   JoshuaTree *j = new_JoshuaTree();
-  StitchedArray *a = j->b(2);
+  StitchedArray *a = j->b(6);
 
   for (int i = 0; i < 60000; i++) {
     j->i(a, i, i);

@@ -66,12 +66,8 @@ static int get(StitchedArray *a, int index) {
   // NOTE: cur node MUST not be NULL here
   do {
     void *child = cur_node->Node[path.outer_index & 1];
-    if (!child) {
-      return -1;
-    } else {
-      path.outer_index >>= 1;
-      cur_node = (Tree *)child;
-    }
+    path.outer_index >>= 1;
+    cur_node = (Tree *)child;
   } while ((path.outer_index != 1 && path.outer_index != 0));
   //  now insert into cur_node at inner_index
   int *tmp_array = cur_node->data;
@@ -85,12 +81,8 @@ static int **get_chunk(StitchedArray *a, int index) {
   // NOTE: cur node MUST not be NULL here
   do {
     void *child = cur_node->Node[path.outer_index & 1];
-    if (!child) {
-      return NULL;
-    } else {
-      path.outer_index >>= 1;
-      cur_node = (Tree *)child;
-    }
+    path.outer_index >>= 1;
+    cur_node = (Tree *)child;
   } while (!(path.outer_index != 1 && path.outer_index != 0));
   //  now insert into cur_node at inner_index
   int **tmp_array = (int **)cur_node->data;
@@ -104,12 +96,8 @@ static Tree *get_node(StitchedArray *a, int index) {
   // NOTE: cur node MUST not be NULL here
   do {
     void *child = cur_node->Node[path.outer_index & 1];
-    if (!child) {
-      return NULL;
-    } else {
-      path.outer_index >>= 1;
-      cur_node = (Tree *)child;
-    }
+    path.outer_index >>= 1;
+    cur_node = (Tree *)child;
   } while ((path.outer_index != 1 && path.outer_index != 0));
   //  now insert into cur_node at inner_index
   return cur_node;
