@@ -55,8 +55,8 @@ static void insert(StitchedArray *a, int index, int data) {
   //  now insert into cur_node at inner_index
   int *tmp_array = cur_node->data;
   if (!tmp_array) {
-	tmp_array = (int *)malloc(a->chunksize);
-	cur_node->data = tmp_array;
+    tmp_array = (int *)malloc(a->chunksize);
+    cur_node->data = tmp_array;
   }
   tmp_array[path.inner_index] = data;
 }
@@ -119,9 +119,9 @@ static void delete_node(Tree *target) {
   free(target);
 }
 
-//TODO: dealloc_node //free the given nodes array
-//TODO: dealloc_cond //conditionally dealloc if the array at node is all 0, 
-//      this can be called as a pass on the entire tree for defragmentation
+// TODO: dealloc_node //free the given nodes array
+// TODO: dealloc_cond //conditionally dealloc if the array at node is all 0,
+//       this can be called as a pass on the entire tree for defragmentation
 
 // JOSHUA TREE CLASS //
 // constructs a StitchedArray given chunksize
@@ -147,11 +147,17 @@ typedef struct JoshuaTree {
 // builder for JoshuaTree class
 static JoshuaTree *new_JoshuaTree() {
   JoshuaTree *jt = (JoshuaTree *)malloc(sizeof(JoshuaTree));
+  // builds a new StitchedArray
   jt->b = build;
+  // inserts a new element into the StitchedArray
   jt->i = insert;
+  // gets the element at the given index
   jt->g = get;
+  // gets the chunk at the given index
   jt->gc = get_chunk;
+  // gets the node at the given index
   jt->gn = get_node;
+  // deletes the given node and all children
   jt->dn = delete_node;
   return jt;
 }
