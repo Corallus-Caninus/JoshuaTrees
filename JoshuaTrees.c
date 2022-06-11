@@ -119,9 +119,20 @@ static void delete_node(Tree *target) {
   free(target);
 }
 
-// TODO: dealloc_node //free the given nodes array
-// TODO: dealloc_cond //conditionally dealloc if the array at node is all 0,
-//       this can be called as a pass on the entire tree for defragmentation
+// free the given nodes array
+static void dealloc_node(Tree *target) { free(target->data); }
+
+// conditionally dealloc if the array at node is all 0,
+// this can be called as a pass on the entire tree for defragmentation
+static void dealloc_cond(Tree *target) {
+  for (int i = 0; i < target->chunksize; i++) {
+    if (target->data[i] != 0) {
+      return;
+    }
+  }
+  // dealloc
+  free(target->data);
+}
 
 // JOSHUA TREE CLASS //
 // constructs a StitchedArray given chunksize
