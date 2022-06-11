@@ -9,16 +9,16 @@ typedef unsigned char uint;
 
 // TODO: encapsulate in an object that makes it easy to store type pointers
 
-typedef struct JoshuaTree {
+typedef struct Tree {
   // points to heap
   void *Node[2];
   // NOTE: always must alloc as a power of 2 so route addressing routine can
   // work these shoud be typecast in and out of JoshNode
   int *data;
-} JoshuaTree;
+} Tree;
 typedef struct StitchedArray {
   int chunksize;
-  JoshuaTree root;
+  Tree root;
 } StitchedArray;
 
 // TODO: int size should vary here for different architectures and addressing
@@ -29,20 +29,24 @@ typedef struct route_t {
 static inline route_t route(StitchedArray root, int index) {
   int outer_index = (index >> root.chunksize) + 2;
   int inner_index = index & ((1 << root.chunksize) - 1);
-  return (route_t){outer_index, inner_index};
+  // return (route_t){outer_index, inner_index};
+  // route_t res = route_t{outer_index, inner_index};
+  // fix the above error
+  route_t res = {outer_index, inner_index};
+  return res;
 }
 
-void insert(StitchedArray *a, int index, int data) {
+static void insert(StitchedArray *a, int index, int data) {
   route_t path = route(*a, index);
-  JoshuaTree *cur_node = &a->root;
-  //TODO: this should be more static?
+  Tree *cur_node = &a->root;
+  // TODO: this should be more static?
   int size_node = sizeof(int) << a->chunksize;
   // NOTE: cur node MUST not be NULL here
   do {
     void *child = cur_node->Node[path.outer_index & 1];
     if (!child) {
       // allocate a new node
-      JoshuaTree *tmp_node = (JoshuaTree *)malloc(sizeof(JoshuaTree));
+      Tree *tmp_node = (Tree *)malloc(sizeof(Tree));
       // TODO: we dont necessarily need to eagerly alloc each time, which
       //       can make sparse indexing performant, profile this
       //  assign tmp_node to child
@@ -51,7 +55,7 @@ void insert(StitchedArray *a, int index, int data) {
       tmp_node->Node[1] = NULL;
       cur_node->Node[path.outer_index & 1] = tmp_node;
     } else {
-      cur_node = (JoshuaTree *)child;
+      cur_node = (Tree *)child;
       path.outer_index >>= 1;
     }
   } while ((path.outer_index != 1 && path.outer_index != 0));
@@ -60,9 +64,9 @@ void insert(StitchedArray *a, int index, int data) {
   tmp_array[path.inner_index] = data;
 }
 
-int get(StitchedArray *a, int index) {
+static int get(StitchedArray *a, int index) {
   route_t path = route(*a, index);
-  JoshuaTree *cur_node = &a->root;
+  Tree *cur_node = &a->root;
   // NOTE: cur node MUST not be NULL here
   do {
     void *child = cur_node->Node[path.outer_index & 1];
@@ -70,7 +74,7 @@ int get(StitchedArray *a, int index) {
       return -1;
     } else {
       path.outer_index >>= 1;
-      cur_node = (JoshuaTree *)child;
+      cur_node = (Tree *)child;
     }
   } while ((path.outer_index != 1 && path.outer_index != 0));
   //  now insert into cur_node at inner_index
@@ -79,9 +83,9 @@ int get(StitchedArray *a, int index) {
 }
 
 // returns the given outer_index array
-int **get_chunk(StitchedArray *a, int index) {
+static int **get_chunk(StitchedArray *a, int index) {
   route_t path = route(*a, index);
-  JoshuaTree *cur_node = &a->root;
+  Tree *cur_node = &a->root;
   // NOTE: cur node MUST not be NULL here
   do {
     void *child = cur_node->Node[path.outer_index & 1];
@@ -89,18 +93,18 @@ int **get_chunk(StitchedArray *a, int index) {
       return NULL;
     } else {
       path.outer_index >>= 1;
-      cur_node = (JoshuaTree *)child;
+      cur_node = (Tree *)child;
     }
   } while (!(path.outer_index != 1 && path.outer_index != 0));
   //  now insert into cur_node at inner_index
-  int **tmp_array = cur_node->data;
+  int **tmp_array = (int **)cur_node->data;
   return tmp_array;
 }
 
 // returns the node at the given outer_index
-JoshuaTree *get_node(StitchedArray *a, int index) {
+static Tree *get_node(StitchedArray *a, int index) {
   route_t path = route(*a, index);
-  JoshuaTree *cur_node = &a->root;
+  Tree *cur_node = &a->root;
   // NOTE: cur node MUST not be NULL here
   do {
     void *child = cur_node->Node[path.outer_index & 1];
@@ -108,7 +112,7 @@ JoshuaTree *get_node(StitchedArray *a, int index) {
       return NULL;
     } else {
       path.outer_index >>= 1;
-      cur_node = (JoshuaTree *)child;
+      cur_node = (Tree *)child;
     }
   } while ((path.outer_index != 1 && path.outer_index != 0));
   //  now insert into cur_node at inner_index
@@ -119,37 +123,47 @@ JoshuaTree *get_node(StitchedArray *a, int index) {
 // TCO'd or iterated
 // deletes the given node and recursively deletes all children
 // nodes
-void delete_node(JoshuaTree *target) {
+static void delete_node(Tree *target) {
   if (target->Node[0]) {
-    delete_node((JoshuaTree *)target->Node[0]);
+    delete_node((Tree *)target->Node[0]);
   }
   if (target->Node[1]) {
-    delete_node((JoshuaTree *)target->Node[1]);
+    delete_node((Tree *)target->Node[1]);
   }
   free(target->data);
   free(target);
 }
 
-int main(int argc, char **argv) {
-  time_t t = time(NULL);
-  int size_node = sizeof(int) << 2;
-  StitchedArray test_array = {
-      .chunksize = 2,
-      .root = {.Node = {NULL, NULL}, .data = (int *)malloc(size_node)}};
-  printf("%d\n", 1 << test_array.chunksize);
-  insert(&test_array, 10, 1);
-  printf("done");
-  insert(&test_array, 11, 2);
-  printf("done");
-  int get_one = get(&test_array, 10);
-  // print one
-  printf("%d\n", get_one);
-  insert(&test_array, 11, 3);
-  int get_three = get(&test_array, 11);
-  printf("%d\n", get_three);
-  insert(&test_array, 10000000, 1);
-  int get_last = get(&test_array, 10000000);
-  printf("last: %d\n", get_last);
-  // print the time
-  printf("%d\n", (int)(time(NULL)) - (int)(t));
+// JOSHUA TREE CLASS //
+// constructs a StitchedArray given chunksize
+static StitchedArray *build(int chunksize) {
+  StitchedArray *a = (StitchedArray *)malloc(sizeof(StitchedArray));
+  a->chunksize = chunksize;
+  a->root.Node[0] = NULL;
+  a->root.Node[1] = NULL;
+  a->root.data = NULL;
+  return a;
 }
+
+// class for JoshuaTrees
+typedef struct JoshuaTree {
+  StitchedArray *(*b)(int);
+  // function pointers:
+  void (*i)(struct StitchedArray *, int, int);
+  int (*g)(struct StitchedArray *, int);
+  int **(*gc)(struct StitchedArray *, int);
+  Tree *(*gn)(struct StitchedArray *, int);
+  void (*dn)(struct Tree *);
+} JoshuaTree;
+// builder for JoshuaTree class
+static JoshuaTree *new_JoshuaTree() {
+  JoshuaTree *jt = (JoshuaTree *)malloc(sizeof(JoshuaTree));
+  jt->b = build;
+  jt->i = insert;
+  jt->g = get;
+  jt->gc = get_chunk;
+  jt->gn = get_node;
+  jt->dn = delete_node;
+  return jt;
+}
+
