@@ -7,13 +7,10 @@
 
 typedef unsigned char uint;
 
-// TODO: encapsulate in an object that makes it easy to store type pointers
-
 typedef struct Tree {
   // points to heap
   void *Node[2];
-  // NOTE: always must alloc as a power of 2 so route addressing routine can
-  // work these shoud be typecast in and out of JoshNode
+  // NOTE: always must alloc as a power of 2 for the addressing routine
   int *data;
 } Tree;
 typedef struct StitchedArray {
@@ -29,9 +26,6 @@ typedef struct route_t {
 static inline route_t route(StitchedArray root, int index) {
   int outer_index = (index >> root.chunksize) + 2;
   int inner_index = index & ((1 << root.chunksize) - 1);
-  // return (route_t){outer_index, inner_index};
-  // route_t res = route_t{outer_index, inner_index};
-  // fix the above error
   route_t res = {outer_index, inner_index};
   return res;
 }
@@ -49,11 +43,13 @@ static void insert(StitchedArray *a, int index, int data) {
       Tree *tmp_node = (Tree *)malloc(sizeof(Tree));
       // TODO: we dont necessarily need to eagerly alloc each time, which
       //       can make sparse indexing performant, profile this
-      //  assign tmp_node to child
       tmp_node->data = (int *)malloc(size_node);
       tmp_node->Node[0] = NULL;
       tmp_node->Node[1] = NULL;
+      //  assign tmp_node to child
       cur_node->Node[path.outer_index & 1] = tmp_node;
+      cur_node = tmp_node;
+      path.outer_index >>= 1;
     } else {
       cur_node = (Tree *)child;
       path.outer_index >>= 1;
@@ -166,4 +162,3 @@ static JoshuaTree *new_JoshuaTree() {
   jt->dn = delete_node;
   return jt;
 }
-
