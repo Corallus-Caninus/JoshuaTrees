@@ -3,6 +3,8 @@
 
 [WIP]
 tunable BST-arrays built for performance.
+Theres alot of improvement to be done including branchless optimization in allocation and binary sequence addressing for balanced-on-insertion trees (gotta test and profile again).
+
 
 Let me know what you think:
 ward.joshua92@yahoo.com
